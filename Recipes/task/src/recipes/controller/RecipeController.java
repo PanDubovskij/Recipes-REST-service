@@ -1,13 +1,15 @@
 package recipes.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import recipes.model.RecipeDTO;
 import recipes.service.RecipeService;
+
+import javax.validation.Valid;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("api/recipe")
@@ -16,38 +18,39 @@ public class RecipeController {
 
     private RecipeService recipeService;
 
-    private ObjectMapper objectMapper;
-
-
-    @PostMapping("/new")
-    public ResponseEntity<String> addRecipe(@RequestBody String recipeJSON) {
+    @PostMapping("new")
+    public ResponseEntity<Map<String, Long>> saveRecipe(@Valid @RequestBody RecipeDTO recipeDTO) {
         System.out.println("post response");
-        System.out.println(recipeJSON);
-        String response;
+        System.out.println(recipeDTO);
         try {
-            RecipeDTO dto = objectMapper.readValue(recipeJSON, RecipeDTO.class);
-            recipeService.saveRecipe(dto);
-            System.out.println("\n" + dto.getId() + "\n");
-
-            response = "{\n\t\"id\": " + dto.getId() + "\n}";
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (JsonProcessingException e) {
-            response = "Wrong JSON!";
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            RecipeDTO dto = recipeService.saveRecipe(recipeDTO);
+            System.out.println(dto);
+            return new ResponseEntity<>(Map.of("id", dto.getId()), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<String> getRecipe(@PathVariable("id") int id) {
+    public ResponseEntity<RecipeDTO> getRecipe(@PathVariable("id") Long id) {
         System.out.println("get response");
-        String response;
         try {
-            response = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(recipeService.getRecipe(id));
+            RecipeDTO response = recipeService.getRecipeById(id);
+            System.out.println(response);
             return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 
-        } catch (IndexOutOfBoundsException | JsonProcessingException e) {
-            response = "No such content";
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRecipe(@PathVariable("id") Long id) {
+        System.out.println("delete response");
+        try {
+            recipeService.deleteRecipe(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 

@@ -1,8 +1,8 @@
 package recipes.repository;
 
-//import org.springframework.data.repository.CrudRepository;
-//import recipes.repository.entity.Recipe;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+import recipes.repository.entity.Recipe;
 
-public interface RecipeRepository /*extends CrudRepository<Recipe, String>*/ {
-
-}
+@Repository
+public interface RecipeRepository extends CrudRepository<Recipe, Long> {}

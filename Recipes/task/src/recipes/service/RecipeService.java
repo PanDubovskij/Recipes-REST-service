@@ -1,49 +1,69 @@
 package recipes.service;
 
 import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import recipes.mapper.RecipeMapper;
 import recipes.model.RecipeDTO;
-import recipes.repository.entity.RecipeList;
+import recipes.repository.RecipeRepository;
+import recipes.repository.entity.Recipe;
+
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 
-@Component
+@Service
 @AllArgsConstructor
 public class RecipeService {
 
-    private static int id;
-
-    private final RecipeList recipes;
-
     private final RecipeMapper recipeMapper;
 
+    private final RecipeRepository repository;
 
-    public boolean saveRecipe(RecipeDTO dto) {
+    public RecipeDTO getRecipeById(Long id) throws NoSuchElementException {
+        Optional<Recipe> recipe = repository.findById(id);
+        if (recipe.isPresent()) {
+            System.out.println(recipe);
+            return recipeMapper.convertRecipe2DTO(recipe.get());
+        } else {
+            ///////////////////////////////////////////
+            throw new NoSuchElementException();
+            //////////////////////////////////////////
+        }
+    }
 
-        System.out.println(id);
+    public RecipeDTO saveRecipe(RecipeDTO recipeDTO) throws IllegalArgumentException {
+        //////////////////////////////////////////////////
+        System.out.println("///////////////////////////////////");
+        System.out.println("///////////////////////////////////");
+        System.out.println("///////////////////////////////////");
 
-        dto.setId(id);
-        id++;
-        return recipes.saveRecipe(recipeMapper.convertDTO2Recipe(dto));
+
+        Recipe recipe = recipeMapper.convertDTO2Recipe(recipeDTO);
+        System.out.println(recipe);
+
+        Recipe savedRecipe = repository.save(recipe);
+        System.out.println(savedRecipe);
+
+        RecipeDTO returnValue = recipeMapper.convertRecipe2DTO(savedRecipe);
+        System.out.println(returnValue);
+
+
+        System.out.println("///////////////////////////////////");
+        System.out.println("///////////////////////////////////");
+        System.out.println("///////////////////////////////////");
+
+
+        return returnValue;
     }
 
 
-    public RecipeDTO getRecipe(int id) throws IndexOutOfBoundsException {
-
-        //compare index with size
-        return recipeMapper.convertRecipe2DTO(recipes.getRecipe(id));
-
+    public void deleteRecipe(Long id) throws NoSuchElementException {
+        /////////////////////////////////////////
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+        } else {
+            throw new NoSuchElementException();
+        }
+        //////////////////////////////////////
     }
-
-//    public void updateRecipe(int id, RecipeDTO dto) throws IndexOutOfBoundsException{
-//
-//        //compare index with size
-//
-//        recipes.updateRecipe(id, recipeMapper.convertDTO2Recipe(dto));
-//    }
-
-//    public boolean deleteRecipe(RecipeDTO dto) {
-//        id--;
-//        return recipes.deleteRecipe(recipeMapper.convertDTO2Recipe(dto));
-//    }
 }
